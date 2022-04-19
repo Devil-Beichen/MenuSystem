@@ -11,10 +11,33 @@
 // 我们为自己的菜单定义委托，也绑定回调
 // 
 
-/**  动态多人游戏创建会话多播委托
- * @param bWasSuccessful - 是成功的
+/**  声明动态 多人游戏创建会话创建 多播委托 一个参数
+ * @param bWasSuccessful   是成功的
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
+
+/** 声明组播 多人游戏中找到会话完成 委托 两个参数
+ * @param SessionResults	 	会话结果
+ * @param bWasSuccessful	 	是成功的
+ */
+DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete,
+                                     const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
+
+/**声明组播 多人游戏中加入会话完成 委托 一个参数
+ * @param Result	 	结果
+ */
+DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result)
+
+/**  声明动态 多人模式摧毁会话完成 多播委托 一个参数
+ * @param bWasSuccessful   是成功的
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
+
+/**  声明动态 多人游戏开始会话完成 多播委托 一个参数
+ * @param bWasSuccessful   是成功的
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
+
 
 /** 多人在线会话子系统
  * 
@@ -33,18 +56,18 @@ public: //公共部分
 	//
 
 	/** 创建会话
-	 * @param NumPublicConnections	-	玩家数量
-	 * @param MatchType				-	匹配类型
+	 * @param NumPublicConnections	 	玩家数量
+	 * @param MatchType				 	匹配类型
 	 */
 	void CreateSession(int32 NumPublicConnections, FString MatchType);
 
 	/** 查找会话
-	 * @param MaxSearchResults		-	最大的搜索结果
+	 * @param MaxSearchResults		 	最大的搜索结果
 	 */
 	void FindSessions(int32 MaxSearchResults);
 
 	/** 加入会话
-	 * @param SessionResult			-	会话结果
+	 * @param SessionResult			 	会话结果
 	 */
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
 
@@ -55,11 +78,19 @@ public: //公共部分
 	void StartSession();
 
 	//
-	//	我们自己定义的代理，为菜单类回调绑定自定义委托
+	//	自己定义的代理，为菜单类回调绑定自定义委托
 	//
 
 	//多人游戏创建会话完成
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
+	//多人游戏查找会话完成
+	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
+	//多人游戏加入会话完成
+	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
+	//多人游戏摧毁会话完成
+	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
+	//多人游戏开始会话完成
+	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
 protected: //受保护的部分
 
@@ -69,31 +100,31 @@ protected: //受保护的部分
 	//
 
 	/** 创建会话完成
-	 * @param SessionName		-	会话名称
-	 * @param bWasSuccessful	-	是成功的
+	 * @param SessionName		 	会话名称
+	 * @param bWasSuccessful	 	是成功的
 	 */
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 
 	/** 找到会话完成
-	 * @param bWasSuccessful	-	是成功的
+	 * @param bWasSuccessful		是成功的
 	 */
 	void OnFindSessionsComplete(bool bWasSuccessful);
 
 	/** 加入会话完成
-	 * @param SessionName		-	会话名称
-	 * @param Result			-	结果
+	 * @param SessionName			会话名称
+	 * @param Result				结果
 	 */
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
 	/** 销毁会话完成
-	 * @param SessionName		-	会话名称
-	 * @param bWasSuccessful	-	是成功的
+	 * @param SessionName		 	会话名称
+	 * @param bWasSuccessful	 	是成功的
 	 */
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 
 	/** 开始会话完成
-	 * @param SessionName		-	会话名称
-	 * @param bWasSuccessful	-	是成功的
+	 * @param SessionName		 	会话名称
+	 * @param bWasSuccessful	 	是成功的
 	 */
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 

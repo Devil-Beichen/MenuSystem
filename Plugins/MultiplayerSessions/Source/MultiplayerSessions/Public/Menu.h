@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/Button.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Menu.generated.h"
 
 /** 菜单
@@ -18,8 +18,8 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 public: //公共部分
 
 	/** 菜单设置
-	 * @param NumberOfPublicConnections		-	玩家数量
-	 * @param TypeOfMatch					-	匹配类型
+	 * @param NumberOfPublicConnections		 	玩家数量
+	 * @param TypeOfMatch					 	匹配类型
 	 */
 	UFUNCTION(BlueprintCallable, meta=(Keywords = "菜单设置", DisplayName = "菜单设置"), Category="会话相关")
 	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("对所有人开放")));
@@ -35,19 +35,32 @@ protected: //受保护的部分
 	//
 	//多人在线会话子系统上自定义委托的回调 
 	//
-	
+
 	/** 创建会话
-	 * @param bWasSuccessful	-	是成功的
+	 * @param bWasSuccessful	 	是成功的
 	 */
 	UFUNCTION()
 	void OnCreateSession(bool bWasSuccessful);
 
+	//查找会话
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults,bool bWasSuccessful);
+
+	//加入会话
+	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
+
+	//摧毁会话
+	UFUNCTION()
+	void OnDestroySession(bool bWasSuccessful);
+
+	//开始会话
+	UFUNCTION()
+	void OnStartSession(bool bWasSuccessful);
 
 private: //私有部分
 
 	//创建会话按钮
 	UPROPERTY(meta=(BindWidget))
-	UButton* HostButton;
+	class UButton* HostButton;
 
 	//加入会话按钮
 	UPROPERTY(meta=(BindWidget))
