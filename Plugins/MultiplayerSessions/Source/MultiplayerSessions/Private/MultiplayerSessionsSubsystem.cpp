@@ -3,6 +3,7 @@
 
 #include "MultiplayerSessionsSubsystem.h"
 
+#include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 
 //构造函数
@@ -27,6 +28,39 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 //创建会话
 void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString MatchType)
 {
+	if (!SessionInterface.IsValid())
+	{
+		return;
+	}
+
+	//获得指定会话名称
+	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+	//如果指定的会话不为空指针就删除
+	if (ExistingSession != nullptr)
+		SessionInterface->DestroySession(NAME_GameSession);
+
+	//将创建会话委托句柄存储起来，这样我们就可以从委托列表中删除它  （会话请求完成时，将触发委托函数）
+	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
+		CreateSessionCompleteDelegate);
+	//设置单个会话的所有设置
+	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
+	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false; //设置游戏是联网模式
+	LastSessionSettings->NumPublicConnections = NumPublicConnections; //设置玩家数量
+	LastSessionSettings->bAllowJoinInProgress = true; //允许加入正在运行的游戏
+	LastSessionSettings->bAllowJoinViaPresence = true; //允许通过玩家的身份加入
+	LastSessionSettings->bShouldAdvertise = true;// 该匹配在服务上公开
+	LastSessionSettings->bUsesPresence = true;//显示用户信息状态
+	//LastSessionSettings->bUseLobbiesIfAvailable = true; //如果平台支持可以搜索 Lobby API
+	LastSessionSettings->Set(FName("MatchType"), MatchType,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	
+	//通过控制器获取本地第一个有效的玩家
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	//根据指定设置创建在线会话
+	if( !SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
+	{
+		//失败了就清除委托
+		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+	}
 }
 
 //查找会话

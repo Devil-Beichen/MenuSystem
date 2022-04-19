@@ -86,6 +86,9 @@ private: //私有部分
 	//在线会话接口指针
 	IOnlineSessionPtr SessionInterface;
 
+	//单个会话的所有设置
+	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+
 	//
 	// 添加到网上会话接口委托列表
 	// 我们将绑定多人游戏会话子系统，并对这些内部回调
