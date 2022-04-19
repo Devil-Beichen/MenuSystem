@@ -38,6 +38,12 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 		//设置指定的子系统
 		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
 	}
+
+	if (MultiplayerSessionsSubsystem)
+	{
+		//在线会话子系统 动态绑定 创建会话
+		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
+	}
 }
 
 //初始化
@@ -62,27 +68,47 @@ void UMenu::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
 }
 
-//主机按钮点击
-void UMenu::HostButtonClicked()
+//创建会话
+void UMenu::OnCreateSession(bool bWasSuccessful)
 {
-	if (GEngine)
+	if (bWasSuccessful)
 	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Yellow,
-			FString::Printf(TEXT("创建会话"))
-		);
-	}
-	if (MultiplayerSessionsSubsystem)
-	{
-		//通过子系统创建会话
-		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Yellow,
+				FString::Printf(TEXT("会话创建成功"))
+			);
+		}
 		if (UWorld* World = GetWorld())
 		{
 			//服务器的旅行
 			World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
 		}
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Red,
+				FString::Printf(TEXT("会话创建失败！！！"))
+			);
+		}
+	}
+}
+
+//主机按钮点击
+void UMenu::HostButtonClicked()
+{
+	if (MultiplayerSessionsSubsystem)
+	{
+		//通过子系统创建会话
+		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
 	}
 }
 

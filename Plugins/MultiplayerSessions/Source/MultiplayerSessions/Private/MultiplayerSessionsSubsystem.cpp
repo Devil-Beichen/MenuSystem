@@ -48,18 +48,22 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->NumPublicConnections = NumPublicConnections; //设置玩家数量
 	LastSessionSettings->bAllowJoinInProgress = true; //允许加入正在运行的游戏
 	LastSessionSettings->bAllowJoinViaPresence = true; //允许通过玩家的身份加入
-	LastSessionSettings->bShouldAdvertise = true;// 该匹配在服务上公开
-	LastSessionSettings->bUsesPresence = true;//显示用户信息状态
+	LastSessionSettings->bShouldAdvertise = true; // 该匹配在服务上公开
+	LastSessionSettings->bUsesPresence = true; //显示用户信息状态
 	//LastSessionSettings->bUseLobbiesIfAvailable = true; //如果平台支持可以搜索 Lobby API
-	LastSessionSettings->Set(FName("MatchType"), MatchType,EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-	
+	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
 	//通过控制器获取本地第一个有效的玩家
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	//根据指定设置创建在线会话
-	if( !SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
+	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession,
+	                                     *LastSessionSettings))
 	{
-		//失败了就清除委托
+		//创建会话失败清除委托
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+
+		//广播自定义的委托
+		MultiplayerOnCreateSessionComplete.Broadcast(false);
 	}
 }
 
@@ -86,6 +90,13 @@ void UMultiplayerSessionsSubsystem::StartSession()
 //创建会话完成
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
+	if (SessionInterface)
+	{
+		//创建会话完成清除委托
+		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+	}
+	//广播自定义的委托
+	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 
 //找到会话完成

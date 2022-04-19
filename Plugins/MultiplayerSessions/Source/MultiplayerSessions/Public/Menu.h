@@ -32,6 +32,16 @@ protected: //受保护的部分
 	//从关卡中移除
 	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
 
+	//
+	//多人在线会话子系统上自定义委托的回调 
+	//
+	
+	/** 创建会话
+	 * @param bWasSuccessful	-	是成功的
+	 */
+	UFUNCTION()
+	void OnCreateSession(bool bWasSuccessful);
+
 
 private: //私有部分
 

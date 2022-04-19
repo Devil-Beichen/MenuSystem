@@ -7,6 +7,15 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+//
+// 我们为自己的菜单定义委托，也绑定回调
+// 
+
+/**  动态多人游戏创建会话多播委托
+ * @param bWasSuccessful - 是成功的
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
+
 /** 多人在线会话子系统
  * 
  */
@@ -44,6 +53,13 @@ public: //公共部分
 
 	//开始会话
 	void StartSession();
+
+	//
+	//	我们自己定义的代理，为菜单类回调绑定自定义委托
+	//
+
+	//多人游戏创建会话完成
+	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 
 protected: //受保护的部分
 
@@ -105,19 +121,19 @@ private: //私有部分
 
 	//查找会话完成委托句柄
 	FDelegateHandle FindSessionCompleteDelegateHandle;
-	
+
 	//在线会话加入过程完成时的委托
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 
 	//加入会话完成委托句柄
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
-	
+
 	//在线会话被摧毁时的委托
 	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
 
 	//销毁会话完成委托句柄
 	FDelegateHandle DestroySessionCompleteDelegateHandle;
-	
+
 	//在线会话变成开始的委托
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 
