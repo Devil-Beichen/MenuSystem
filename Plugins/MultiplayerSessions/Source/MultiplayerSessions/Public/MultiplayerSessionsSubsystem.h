@@ -136,6 +136,9 @@ private: //私有部分
 	//单个会话的所有设置
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 
+	//最后一个会话搜索
+	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
+
 	//
 	// 添加到网上会话接口委托列表
 	// 我们将绑定多人游戏会话子系统，并对这些内部回调
