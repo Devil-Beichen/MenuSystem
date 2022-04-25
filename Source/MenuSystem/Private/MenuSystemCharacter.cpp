@@ -64,7 +64,7 @@ AMenuSystemCharacter::AMenuSystemCharacter():
 	if (const IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get())
 	{
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface(); //获得会话管理器的服务接口
-		if (GEngine)
+		/*if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(
 				-1,
@@ -72,7 +72,7 @@ AMenuSystemCharacter::AMenuSystemCharacter():
 				FColor::Green,
 				FString::Printf(TEXT("发现 %s 的子系统"), *OnlineSubsystem->GetSubsystemName().ToString())
 			);
-		}
+		}*/
 	}
 }
 

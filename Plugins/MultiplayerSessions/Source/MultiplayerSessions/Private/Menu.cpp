@@ -47,7 +47,7 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
 		//在线会话子系统 查找会话 添加一个基于Uobject的成员函数委托
 		MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &ThisClass::OnFindSessions);
-		//在线会话子系统 加入会话 添加一个基于uobject的成员函数委托
+		//在线会话子系统 加入会话 添加一个基于Uobject的成员函数委托
 		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
 		//在线会话子系统 动态多播绑定 删除会话
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.
@@ -89,7 +89,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 			GEngine->AddOnScreenDebugMessage(
 				1,
 				15.f,
-				FColor::Yellow,
+				FColor::Green,
 				FString::Printf(TEXT("会话创建成功"))
 			);
 		}
@@ -116,7 +116,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 //查找会话
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
 {
-	if (!bWasSuccessful)
+	/*if (!bWasSuccessful)
 	{
 		if (GEngine)
 		{
@@ -128,7 +128,8 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			);
 		}
 		return;
-	}
+	}*/
+
 	if (MultiplayerSessionsSubsystem == nullptr)
 	{
 		return;
@@ -136,14 +137,40 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 
 	for (auto Result : SessionResults)
 	{
+		const FString ID = Result.GetSessionIdStr(); //会话结果的ID
+		const FString User = Result.Session.OwningUserName; //会话拥有者的名字
 		//设置值
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
 		if (SettingsValue == MatchType) //查找到的与匹配类型同一的话
 		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					15.f,
+					FColor::Cyan,
+					FString::Printf(TEXT("ID: %s, 名字： %s"), *ID, *User)
+				);
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					15.f,
+					FColor::Cyan,
+					FString::Printf(TEXT("加入匹配类型： %s"), *SettingsValue)
+				);
+			}
 			//加入会话
 			MultiplayerSessionsSubsystem->JoinSession(Result);
 			return;
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(
+				1,
+				2.f,
+				FColor::Red,
+				FString::Printf(TEXT("未能找到对应的匹配类型！！！"))
+			);
 		}
 	}
 }
@@ -152,9 +179,9 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
 	//联机子系统获取
-	if (const IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 	{
-		const IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); //设置会话接口指针
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); //设置会话接口指针
 		if (SessionInterface.IsValid())
 		{
 			FString Address;
@@ -164,6 +191,15 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 			//获取游戏实例的第一个控制器
 			if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 			{
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(
+						-1,
+						15.f,
+						FColor::Yellow,
+						FString::Printf(TEXT("连接字符串： %s"), *Address)
+					);
+				}
 				//进入绝对URL IP地址的地图
 				PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 			}
@@ -195,7 +231,9 @@ void UMenu::HostButtonClicked()
 void UMenu::JoinButtonClicked()
 {
 	if (MultiplayerSessionsSubsystem)
+	{
 		MultiplayerSessionsSubsystem->FindSessions(10000); //多人子系统是否有效，有效就开始查找
+	}
 }
 
 //菜单移除

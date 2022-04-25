@@ -22,7 +22,18 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 {
 	//联机子系统获取
 	if (const IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	{
 		SessionInterface = Subsystem->GetSessionInterface(); //设置会话接口指针
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Green,
+				FString::Printf(TEXT("发现 %s 的子系统"), *Subsystem->GetSubsystemName().ToString())
+			);
+		}
+	}
 }
 
 //创建会话
@@ -31,6 +42,16 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	if (!SessionInterface.IsValid())
 	{
 		return;
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1,
+			15.f,
+			FColor::Yellow,
+			FString::Printf(TEXT("开始创建"))
+		);
 	}
 
 	//获得指定会话名称
@@ -50,7 +71,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bAllowJoinViaPresence = true; //允许通过玩家的身份加入
 	LastSessionSettings->bShouldAdvertise = true; // 该匹配在服务上公开
 	LastSessionSettings->bUsesPresence = true; //显示用户信息状态
-	//LastSessionSettings ->bUseLobbiesIfAvailable = true; //如果平台支持可以搜索 Lobby API
+	LastSessionSettings ->bUseLobbiesIfAvailable = true; //如果平台支持可以搜索 Lobby API
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	//通过控制器获取本地第一个有效的玩家
@@ -74,12 +95,21 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 	{
 		return;
 	}
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1,
+			15.f,
+			FColor::Yellow,
+			FString::Printf(TEXT("开始查找"))
+		);
+	}
 	//查找会话完成委托句柄
 	FindSessionCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
 		FindSessionsCompleteDelegate);
 
 	//会话搜索初始化
-	LastSessionSearch = MakeShareable(new FOnlineSessionSearch);
+	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
 	LastSessionSearch->MaxSearchResults = MaxSearchResults; //设置最大查询次数
 	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false; //是否查询LAN匹配
 	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals); //查找匹配的服务器
@@ -139,6 +169,7 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 		//创建会话完成清除委托
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	}
+
 	//广播自定义的委托
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
@@ -159,7 +190,7 @@ void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 		return;
 	}
 	//查询会话成功广播自定义 多人游戏中找到会话 代理
-	MultiplayerOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, true);
+	MultiplayerOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, bWasSuccessful);
 }
 
 //加入会话完成
