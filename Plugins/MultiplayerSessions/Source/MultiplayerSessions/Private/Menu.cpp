@@ -6,10 +6,12 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 //菜单设置
-void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
+void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
 {
+	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	NumPublicConnections = NumberOfPublicConnections;
 	MatchType = TypeOfMatch;
 	AddToViewport(); //添加到窗口
@@ -68,6 +70,9 @@ bool UMenu::Initialize()
 	//加入按钮有效，绑定加入函数
 	if (JoinButton)
 		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
+	//退出按钮有效，绑定退出函数
+	if (QuitButton)
+		QuitButton->OnClicked.AddDynamic(this, &ThisClass::QuitButtonClicked);
 
 	return true;
 }
@@ -96,7 +101,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		if (UWorld* World = GetWorld())
 		{
 			//服务器的旅行
-			World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+			World->ServerTravel(PathToLobby);
 		}
 	}
 	else
@@ -110,13 +115,20 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 				FString::Printf(TEXT("会话创建失败！！！"))
 			);
 		}
+		HostButton->SetIsEnabled(true);
 	}
 }
 
 //查找会话
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful)
+	if (MultiplayerSessionsSubsystem == nullptr)
+	{
+		return;
+	}
+
+	//判断是否查找成功或者查找到的会话的结果是空的
+	if (!bWasSuccessful || SessionResults.Num() == 0)
 	{
 		if (GEngine)
 		{
@@ -127,12 +139,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 				FString::Printf(TEXT("会话查找失败！！！"))
 			);
 		}
-		return;
-	}*/
-
-	if (MultiplayerSessionsSubsystem == nullptr)
-	{
-		return;
+		JoinButton->SetIsEnabled(true);
 	}
 
 	for (auto Result : SessionResults)
@@ -150,13 +157,7 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 					-1,
 					15.f,
 					FColor::Cyan,
-					FString::Printf(TEXT("ID: %s, 名字： %s"), *ID, *User)
-				);
-				GEngine->AddOnScreenDebugMessage(
-					-1,
-					15.f,
-					FColor::Cyan,
-					FString::Printf(TEXT("加入匹配类型： %s"), *SettingsValue)
+					FString::Printf(TEXT("查找到 ID: %s, 名字： %s, 创建的会话"), *ID, *User)
 				);
 			}
 			//加入会话
@@ -179,10 +180,9 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
 	//联机子系统获取
-	if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+	if (const IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 	{
-		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); //设置会话接口指针
-		if (SessionInterface.IsValid())
+		if (const IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface()) //设置会话接口指针
 		{
 			FString Address;
 			//解析连接字符串
@@ -197,7 +197,7 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 						-1,
 						15.f,
 						FColor::Yellow,
-						FString::Printf(TEXT("连接字符串： %s"), *Address)
+						FString::Printf(TEXT("正在连接地址： %s"), *Address)
 					);
 				}
 				//进入绝对URL IP地址的地图
@@ -205,6 +205,9 @@ void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 			}
 		}
 	}
+
+	if (Result != EOnJoinSessionCompleteResult::Success)
+		JoinButton->SetIsEnabled(true);
 }
 
 //摧毁会话
@@ -220,6 +223,7 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 //主机按钮点击
 void UMenu::HostButtonClicked()
 {
+	HostButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
 		//通过子系统创建会话
@@ -230,10 +234,17 @@ void UMenu::HostButtonClicked()
 //加入按钮点击
 void UMenu::JoinButtonClicked()
 {
+	JoinButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->FindSessions(10000); //多人子系统是否有效，有效就开始查找
 	}
+}
+
+//退出游戏
+void UMenu::QuitButtonClicked()
+{
+	UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, false);
 }
 
 //菜单移除

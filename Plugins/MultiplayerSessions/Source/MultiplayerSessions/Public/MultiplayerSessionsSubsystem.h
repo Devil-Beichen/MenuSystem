@@ -28,7 +28,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete,
  */
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result)
 
-/**  声明动态 多人模式摧毁会话完成 多播委托 一个参数
+/**  声明动态 多人模式会话摧毁完成 多播委托 一个参数
  * @param bWasSuccessful   是成功的
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
@@ -173,4 +173,13 @@ private: //私有部分
 
 	//启动会话完成委托句柄
 	FDelegateHandle StartSessionCompleteDelegateHandle;
+
+	//创建了会话
+	bool bCreateSessionOnDestroy{false};
+
+	//上一个公共玩家数量
+	int32 LastNumPublicConnections;
+
+	//上一个匹配类型
+	FString LastMatchType;
 };

@@ -20,9 +20,10 @@ public: //公共部分
 	/** 菜单设置
 	 * @param NumberOfPublicConnections		 	玩家数量
 	 * @param TypeOfMatch					 	匹配类型
+	 * @param LobbyPath							大厅地址
 	 */
 	UFUNCTION(BlueprintCallable, meta=(Keywords = "菜单设置", DisplayName = "菜单设置"), Category="会话相关")
-	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("对所有人开放")));
+	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForALL")),FString LobbyPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby")));
 
 protected: //受保护的部分
 
@@ -43,7 +44,7 @@ protected: //受保护的部分
 	void OnCreateSession(bool bWasSuccessful);
 
 	//查找会话
-	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults,bool bWasSuccessful);
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
 
 	//加入会话
 	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
@@ -66,6 +67,10 @@ private: //私有部分
 	UPROPERTY(meta=(BindWidget))
 	UButton* JoinButton;
 
+	//退出游戏按钮
+	UPROPERTY(meta=(BindWidget))
+	UButton* QuitButton;
+
 	//创建会话
 	UFUNCTION()
 	void HostButtonClicked();
@@ -73,6 +78,10 @@ private: //私有部分
 	//加入会话
 	UFUNCTION()
 	void JoinButtonClicked();
+
+	//退出游戏
+	UFUNCTION()
+	void QuitButtonClicked();
 
 	//菜单移除
 	void MenuTearDown();
@@ -84,5 +93,8 @@ private: //私有部分
 	int32 NumPublicConnections{4};
 
 	//匹配类型
-	FString MatchType{TEXT("对所有人开放")};
+	FString MatchType{TEXT("FreeForALL")};
+
+	//大厅地址
+	FString PathToLobby{TEXT("")};
 };
