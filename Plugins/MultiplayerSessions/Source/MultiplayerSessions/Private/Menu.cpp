@@ -78,10 +78,10 @@ bool UMenu::Initialize()
 }
 
 //从关卡中移除
-void UMenu::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+void UMenu::NativeDestruct()
 {
 	MenuTearDown();
-	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
+	Super::NativeDestruct();
 }
 
 //创建会话

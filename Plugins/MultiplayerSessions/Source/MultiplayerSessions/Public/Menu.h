@@ -31,7 +31,7 @@ protected: //受保护的部分
 	virtual bool Initialize() override;
 
 	//从关卡中移除
-	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
+	virtual void NativeDestruct() override;
 
 	//
 	//多人在线会话子系统上自定义委托的回调 
